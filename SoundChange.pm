@@ -9,7 +9,7 @@ use Carp;
 use constant PRINT_RULES => $ENV{LINGUA_SOUNDCHANGE_PRINTRULES} || 0;
 use constant DEBUG => 0;
 
-$Lingua::SoundChange::VERSION = '0.01';
+$Lingua::SoundChange::VERSION = '0.02';
 
 sub new {
     my($class, $vars, $rules, $opts) = @_;
@@ -251,7 +251,6 @@ sub code {
 
 1;
 __END__
-# Below is stub documentation for your module. You better edit it!
 
 =head1 NAME
 
@@ -732,7 +731,7 @@ time.
 A discussion of the rules, including the input and output files, is at
 http://www.zompist.com/spell.html .
 
-=head1 DIFFERENCE
+=head1 DIFFERENCES BETWEEN C<sounds> AND C<Lingua::SoundChange>
 
 This section lists the differences between Mark Rosenfelder's C<sounds>
 program and C<Lingua::SoundChange>, and how to convert from C<sounds>
@@ -898,40 +897,40 @@ Philip Newton, E<lt>pne@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2001 Philip Newton. Based on original code, copyright
-(C) 2001 Mark Rosenfelder.
+Copyright (C) 2001, Philip Newton
+All rights reserved.
 
-This software, along with its associated documentation and example
-files, may be freely used, distributed, and modified, for non-commercial
-purposes only, provided that the above copyright notice and this
-permission notice are included in all copies or substantial
-portions of the software.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
 
-To request a licence for commercial use of software based on Mark
-Rosenfelder's sounds.c code, write to him at markrose@zompist.com.
-
-=head2 NOTE
-
-Please note the restriction on non-commercial use. Selling CPAN CDs,
-for example, is fine as long as the cost is nominal, but using this
-code to make money is not allowed.
-
-This restriction may be removed in the future if the code is modified
-so as not to be based on Mark's code any longer. (Most of it is
-original anyway simply because
-
-=over 4
+=over
 
 =item *
 
-Perl lends itself to a different approach than C, and
+Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer. 
 
 =item *
 
-all the code for reading and parsing config files is basically not here.
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution. 
 
 =back
 
-.)
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+THE POSSIBILITY OF SUCH DAMAGE.
 
 =cut

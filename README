@@ -1,4 +1,4 @@
-Lingua/SoundChange version 0.01
+Lingua/SoundChange version 0.02
 ===============================
 
 This module was inspired by Mark Rosenfelder's sound change applier
@@ -6,8 +6,12 @@ program (http://www.zompist.com/sounds.htm). It's a tool for applying
 sound changes to words -- for example, to show how words changed from
 a parent language to a daughter language.
 
-See also the eg/ subdirectory in the distribution for a script which
-emulates Mark's sounds program.
+DIFFERENCES FROM THE LAST VERSION
+
+I believe that v0.02 of this module is not based on Mark's code in
+sounds.c any more. The 'sounds' example script has been removed until
+a replacement can be written from scratch. The module has been
+relicensed under a BSD-style licence.
 
 INSTALLATION
 
@@ -26,14 +30,38 @@ This module requires these other modules and libraries:
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2001 Philip Newton. Based on original code, copyright
-(C) 2001 Mark Rosenfelder.
+Copyright (C) 2001, Philip Newton
+All rights reserved.
 
-This software, along with its associated documentation and example
-files, may be freely used, distributed, and modified, for non-commercial
-purposes only, provided that the above copyright notice and this
-permission notice are included in all copies or substantial
-portions of the software.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
 
-To request a licence for commercial use of software based on Mark
-Rosenfelder's sounds.c code, write to him at markrose@zompist.com.
+=over
+
+=item *
+
+Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer. 
+
+=item *
+
+Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution. 
+
+=back
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+THE POSSIBILITY OF SUCH DAMAGE.

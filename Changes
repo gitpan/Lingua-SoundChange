@@ -1,5 +1,9 @@
 Revision history for Perl extension Lingua::SoundChange.
 
+0.02  Sat Oct  6 17:30:51 2001
+	- changed licensing terms to BSD-style licence; removed sample 'sounds'
+		wrapper script from the MANIFEST and distribution file
+
 0.01  Sat Sep 22 13:12:35 2001
 	- original version; created by h2xs 1.21 with options
 		-A -X -n Lingua::SoundChange
