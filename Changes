@@ -1,5 +1,25 @@
 Revision history for Perl extension Lingua::SoundChange.
 
+0.04
+	- fixed a bug with the 'keep' option that only surfaced when more
+	than one rule was supplied
+        - Changed the way long variable names are processed. Now the rules
+        C/V/_ and <C>/<V>/_ should be distinguished (the first refers to a
+        letter 'C', the second to a variable named 'C'; previously, the first
+        case would have found the rule 'C' as well, which was not what was
+        intended).
+        - New tests for 'keep' and 'printRules' options (which have now
+        disappeared as individual options following the interface change)
+        - Interface change: instead of the return list consisting either
+        of simple scalars (default) or arrayrefs with two elements (with
+        the 'keep' option), the return list now consists of hashrefs.
+        Current keys are 'word' (the transformed word), 'orig' (the
+        original word), and 'rules' (a list of which rules applied to the
+        word and at which position).
+        This change also means that the module always uses $`, incurring
+        a slight run-time penalty for all regular expressions in the
+        script using Lingua::SoundChange.
+
 0.03  Sat Oct  6 20:19:20 2001
 	- added multiple-letter variable names
 

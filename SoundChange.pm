@@ -8,8 +8,12 @@ use Carp;
 # for debugging:
 use constant PRINT_RULES => $ENV{LINGUA_SOUNDCHANGE_PRINTRULES} || 0;
 use constant DEBUG => 0;
+use vars qw($VERSION);
 
-$Lingua::SoundChange::VERSION = '0.03';
+$VERSION = '0.04';
+
+sub compile_rules($$$$);
+sub compile_vars($$);
 
 sub new {
     my($class, $vars, $rules, $opts) = @_;
@@ -25,7 +29,7 @@ sub new {
         opts      => $opts,
     };
 
-    $obj->{vars}     = compile_vars($vars);
+    $obj->{vars}     = compile_vars($vars, $opts);
     if($opts->{longVars}) {
         $obj->{raw_vars}->{"\Q<$_>\E"} = $vars->{$_} for keys %$vars;
     }
@@ -43,13 +47,15 @@ sub change {
     croak("change needs an array reference") unless ref($words) eq 'ARRAY';
 
     foreach my $word (@$words) {
+        my $origword = $word;
+        my @rules;
+        my $ruleout;
         foreach my $rule (@{$self->rules}) {
-            if($self->keep) {
-                $word = [ $word, $rule->($word) ];
-            } else {
-                $word = $rule->($word);
-            }
+            ($word, $ruleout) = $rule->($word);
+            push @rules, $ruleout if defined $ruleout;
         }
+
+        $word = { orig => $origword, word => $word, rules => \@rules };
     }
 
     $words;
@@ -58,7 +64,7 @@ sub change {
 
 # Private methods
 
-sub compile_rules {
+sub compile_rules ($$$$) {
     my($rules, $vars, $varstring, $opt) = @_;
 
     croak "rules not an array reference" unless ref $rules eq 'ARRAY';
@@ -162,10 +168,8 @@ sub compile_rules {
                 $subfrom =~ s{(\\?)(.)}{$vars->{$2} || $1 . $2}eg;
             }
 
-            # Show where the rule matches, if desired
-            if($opt->{printRules}) {
-                $subto .= qq(print "\Q$from\E->\Q$to\E /\Q$env\E applies to \$word at ", (length(\$`)+1), "\\n"; );
-            }
+            # Show where the rule matches
+            $subto .= qq(\$rule = "\Q$from\E->\Q$to\E /\Q$env\E applies to \$word at " . (length(\$`)+1) . "\\n"; );
 
             $subto .= '$1 . ';
             $subto .= ($vars->{quotemeta $from}
@@ -180,10 +184,11 @@ sub compile_rules {
             my $code = <<"EOF";
 sub {
     my \$word = shift;
+    my \$rule;
     my \$orig;
     # print qq(Working on '\$word'; \Q$from\E->\Q$to\E /\Q$env\E; from is '\Q$subfrom\E and to is '\Q$subto\E'\\n);
     1 while ((\$orig = \$word) =~ s{$subfrom}{$subto}e) && (\$orig ne \$word) && (\$word = \$orig);
-    \$word;
+    return ( \$word, \$rule );
 }
 EOF
 
@@ -196,10 +201,11 @@ EOF
     ( \@compiledrules, \%code );
 }
 
-sub compile_vars {
-    my($vars) = @_;
+sub compile_vars ($$) {
+    my($vars, $opt) = @_;
 
-    croak "not a hash reference" unless ref $vars eq 'HASH';
+    croak "\$vars is not a hash reference" unless ref $vars eq 'HASH';
+    croak "\$opt is not a hash reference" unless ref $opt eq 'HASH';
 
     my %compiledvars;
 
@@ -208,7 +214,11 @@ sub compile_vars {
         # Escape at signs and dollars in the list
         $list =~ s/([\$\@])/\\$1/g;
 
-        $compiledvars{$var} = $compiledvars{"\Q<$var>\E"} = qr/[$list]/;
+        if($opt->{longVars}) {
+            $compiledvars{"\Q<$var>\E"} = qr/[$list]/;
+        } else {
+            $compiledvars{$var} = qr/[$list]/;
+        }
 
         if(PRINT_RULES) {
             print "($var => $list // $compiledvars{$var})\n";
@@ -236,18 +246,6 @@ sub varstring {
     $self->{raw_vars};
 }
 
-sub keep {
-    my($self) = @_;
-
-    $self->{opts}->{keep};
-}
-
-sub printRules {
-    my($self) = @_;
-
-    $self->{opts}->{printRules};
-}
-
 sub code {
     my($self, $token, $code) = @_;
 
@@ -264,6 +262,10 @@ __END__
 
 Lingua::SoundChange - Create regular sound changes
 
+=head1 VERSION
+
+This documentation describes version 0.04 of Lingua::SoundChange
+
 =head1 SYNOPSIS
 
   use Lingua::SoundChange;
@@ -272,7 +274,10 @@ Lingua::SoundChange - Create regular sound changes
   # or
   my $lat2port = Lingua::SoundChange->new($variables, $rules, $options);
 
+  my $original = [ 'first word', 'second word' ];
   my $translation = $lat2port->change($original);
+  # changed words are now in $translation->[0]{word}
+  #                      and $translation->[1]{word}, respectively.
 
 =head1 DESCRIPTION
 
@@ -294,7 +299,7 @@ different sound change rules.
 
 =head2 Methods
 
-=head3 new(HASHREF, ARRAYREF [, HASHREF])
+=head3 new(variables, rules [, options])
 
 The constructor new creates a new Lingua::SoundChange object. It takes
 two or three parameters: a hash ref, an array ref, and another (optional)
@@ -305,7 +310,10 @@ hash ref.
 =item variables
 
 The first parameter is a hash ref listing zero or more "variables".
-These are one-character short cuts for character classes. For example,
+These are short cuts for character classes.
+(They may only be one character long, unless you use the C<longVars>
+option, which see for more details.)
+For example,
 you could define S to be any stop, or F to be any front vowel. These
 are useful in the ruleset, described below. If you do not wish to use
 any variables, pass in a reference to an empty hash as the first
@@ -371,30 +379,6 @@ Possible options are:
 
 =over 4
 
-=item printRules
-
-Whether to print out (to STDOUT) which rule applies to each word, and 
-at which character position, during matching.
-
-The output will look like this:
-
-  s-> /_# applies to secundus at 7 
-
-This will use $`, which will incur a slight time penalty for all
-regular expressions in your script.
-
-Default: false.
-
-=item keep
-
-If this option is set to a true value, then the list of returned items
-will be a list of array refs, each containing two elements: first the
-original word as passed in to the C<change> method, and second the
-(possibly transformed) word. Otherwise, the result list will contain
-only the (possibly transformed) word.
-
-Default: false.
-
 =item longVars
 
 If this option is set to a true value, then you can use long variable
@@ -403,6 +387,13 @@ in rules.
 
 Default: false
 
+NOTE: The default may change to 'true' in the future, as I feel the
+'longVars' behaviour is more convenient. The short variables will then
+only be supported for reasons of backwards compatibility to earlier
+versions of this module and for compatibility to Mark Rosenfelder's
+C<sounds> program, but you will have to ask for the possibility
+explicitly by setting the C<longVars> option to a false value.
+
 =back
 
 =back
@@ -410,17 +401,50 @@ Default: false
 The constructor returns a new Lingua::SoundChange object on success.
 On failure, the constructor will croak.
 
-=head3 change(ARRAYREF)
+=head3 change(words)
 
 Once you have constructed a Lingua::SoundChange object, you can use it
 to apply the sound changes you have described on words.
 
-Pass in an array ref with one word per array element.
+Pass in an array ref with one 'word' per array element.
+(Actually, each element can be anything you wish, but transformations
+are probably most commonly applied to individual words.)
 The sound changes specified in the constructor will be applied to each
 word in turn. The result will be an arrayref containing the transformed
-words.
+words. Each individual element of the arrayref will itself be a hashref
+with the following keys:
 
-Note that this method does not do any splitting of text into words for
+=over 4
+
+=item word
+
+The transformed word
+
+=item orig
+
+The original word, the way you passed it into the function
+
+=item rules
+
+A reference to an array saying which rules applied to the word and at
+which character position they applied. (The array may be empty if no
+rules applied to this word.)
+
+Each element of the output will look something like this:
+
+  s-> /_# applies to secundus at 7 
+
+(including a trailing newline). This can be useful while you are debugging
+your ruleset, for example; you can print out or otherwise examine this
+list to see how words go from the original form to their final modified
+form.
+
+This feature uses $`, which will incur a slight time penalty for all
+regular expressions in your script.
+
+=back
+
+Note that C<change> does not do any splitting of text into words for
 you; this is left up to you. The reason for this is that the concept of
 a B<word> is left up to the user of the module. A simple case would be
 "a sequence of \w characters" or "a sequence of non-space characters".
@@ -438,6 +462,10 @@ The following explanation is largely taken from Mark Rosenfelder's own
 description of his sound change applier program C<sounds>, and modified as
 appropriate for this module. The B<I> in the following narrative is
 Mark's, not mine.
+
+Note that all of Mark's examples use the short variable form, where each
+variable may only be one letter long and is not enclosed in angle
+brackets in the matching.
 
 =head2 Basic operation
 
@@ -877,9 +905,9 @@ C<sounds> outputs results like this:
   leitor [lector]
 
 if the B<-b> switch was passed. C<Lingua::SoundChange> normally
-outputs nothing, instead returning simply C<'leitor'> or (if the
-C<keep> option was specified, C<[ 'lector', 'leitor' ]>). It
-is up to the caller to format the output if this is desired.
+outputs nothing, instead returning simply a hash reference containing
+orig => 'leitor' and word => 'lector'.
+It is up to the caller to format the output if this is desired.
 
 =head2 Command-line switches
 
@@ -890,7 +918,8 @@ C<sounds> takes several command-line switches:
 =item -p
 
 This tells C<sounds> to print out which rules apply to each word.
-Use the C<printRules> option in C<Lingua::SoundChange> for this.
+Use the C<rules> key in the hash returned by C<change> in
+C<Lingua::SoundChange> for this and print out its contents.
 
 =item -b
 
@@ -904,9 +933,10 @@ format the output as you desire.
 =item -l
 
 This switch causes C<sounds> to omit the original word from the
-output, leaving only transformed words. In effect,
-C<Lingua::SoundChange> behaves as if this is always on, unless
-you specify the C<keep> option.
+output, leaving only transformed words. Again, C<Lingua::SoundChange>
+leaves it up to you to format the output however you wish; it always
+returns the original word, the transformed word, and a list of rules
+which applied.
 
 =item -f
 
@@ -915,7 +945,7 @@ F<yyy.out> and not also to the screen.
 
 This switch is not supported directly by C<Lingua::SoundChange>,
 since it doesn't output anything either to a file or to the
-screen (unless the C<printRules> option is specified); instead,
+screen; instead,
 it returns the transformed words from C<change>.
 
 =back
