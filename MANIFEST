@@ -1,6 +1,7 @@
 Changes
 Makefile.PL
 MANIFEST
+MANIFEST.SKIP
 README
 SoundChange.pm
 TODO
@@ -10,5 +11,3 @@ t/1.t
 t/2.t
 t/3.t
 t/4.t
-t/lib/Test/Simple.pm
-t/lib/Test/More.pm

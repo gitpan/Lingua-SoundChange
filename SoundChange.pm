@@ -10,7 +10,7 @@ use constant PRINT_RULES => $ENV{LINGUA_SOUNDCHANGE_PRINTRULES} || 0;
 use constant DEBUG => 0;
 use vars qw($VERSION);
 
-$VERSION = '0.04';
+$VERSION = '0.05';
 
 sub compile_rules($$$$);
 sub compile_vars($$);
@@ -148,6 +148,15 @@ sub compile_rules ($$$$) {
                 # leading #
                 $subfrom .= '^' if defined $1 && length $1;
 
+                # preceding stuff, so we don't need $`
+                # non-greedy
+                # If match anchored at beginning, don't add this
+                if(defined $1 && length $1) {
+                    $subfrom .= '()';
+                } else {
+                    $subfrom .= '(.*?)';
+                }
+
                 # pre-environment
                 $subfrom .= '(' . $option->(quotemeta $2) . ')';
 
@@ -169,13 +178,13 @@ sub compile_rules ($$$$) {
             }
 
             # Show where the rule matches
-            $subto .= qq(\$rule = "\Q$from\E->\Q$to\E /\Q$env\E applies to \$word at " . (length(\$`)+1) . "\\n"; );
+            $subto .= qq(\$rule = "\Q$from\E->\Q$to\E /\Q$env\E applies to \$word at " . (length(\$1)+1) . "\\n"; );
 
-            $subto .= '$1 . ';
+            $subto .= '$1 . $2 . ';
             $subto .= ($vars->{quotemeta $from}
-                      ? "do { my \$char = \$2; \$char =~ tr{$varstring->{quotemeta $from}}{" . ($varstring->{quotemeta $to} || $to) . "}; \$char }"
+                      ? "do { my \$char = \$3; \$char =~ tr{$varstring->{quotemeta $from}}{" . ($varstring->{quotemeta $to} || $to) . "}; \$char }"
                       : "q{" . $to . "}");
-            $subto .= ' . $3';
+            $subto .= ' . $4';
 
             if(PRINT_RULES) {
                 print "[", $#compiledrules + 1, "] $rule --> s{$subfrom}{$subto}eg\n";
@@ -216,12 +225,10 @@ sub compile_vars ($$) {
 
         if($opt->{longVars}) {
             $compiledvars{"\Q<$var>\E"} = qr/[$list]/;
+            print qq[($var => $list // $compiledvars{"\Q<$var>\E"})\n] if PRINT_RULES;
         } else {
             $compiledvars{$var} = qr/[$list]/;
-        }
-
-        if(PRINT_RULES) {
-            print "($var => $list // $compiledvars{$var})\n";
+            print "($var => $list // $compiledvars{$var})\n" if PRINT_RULES;
         }
     }
 
@@ -264,7 +271,8 @@ Lingua::SoundChange - Create regular sound changes
 
 =head1 VERSION
 
-This documentation describes version 0.04 of Lingua::SoundChange
+This documentation describes version 0.05 of Lingua::SoundChange,
+released on 2002-05-20.
 
 =head1 SYNOPSIS
 
@@ -438,9 +446,6 @@ Each element of the output will look something like this:
 your ruleset, for example; you can print out or otherwise examine this
 list to see how words go from the original form to their final modified
 form.
-
-This feature uses $`, which will incur a slight time penalty for all
-regular expressions in your script.
 
 =back
 
@@ -962,7 +967,7 @@ Philip Newton, E<lt>pne@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2001, Philip Newton
+Copyright (C) 2001, 2002 Philip Newton
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -984,18 +989,16 @@ documentation and/or other materials provided with the distribution.
 
 =back
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
-CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
-OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
-AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-THE POSSIBILITY OF SUCH DAMAGE.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 =cut

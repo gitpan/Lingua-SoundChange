@@ -1,6 +1,11 @@
 Revision history for Perl extension Lingua::SoundChange.
 
-0.04
+0.05  2002-05-20
+        - don't ship Test::More; rather, depend on it. That way, the
+        user can use a newer version.
+        - Don't rely on $` any more (instead, use (.*?) and $1).
+
+0.04  Sun Oct 14 18:51:00 2001
 	- fixed a bug with the 'keep' option that only surfaced when more
 	than one rule was supplied
         - Changed the way long variable names are processed. Now the rules
