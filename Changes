@@ -1,0 +1,6 @@
+Revision history for Perl extension Lingua::SoundChange.
+
+0.01  Sat Sep 22 13:12:35 2001
+	- original version; created by h2xs 1.21 with options
+		-A -X -n Lingua::SoundChange
+
