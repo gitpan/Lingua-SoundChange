@@ -9,7 +9,7 @@ use Carp;
 use constant PRINT_RULES => $ENV{LINGUA_SOUNDCHANGE_PRINTRULES} || 0;
 use constant DEBUG => 0;
 
-$Lingua::SoundChange::VERSION = '0.02';
+$Lingua::SoundChange::VERSION = '0.03';
 
 sub new {
     my($class, $vars, $rules, $opts) = @_;
@@ -26,6 +26,9 @@ sub new {
     };
 
     $obj->{vars}     = compile_vars($vars);
+    if($opts->{longVars}) {
+        $obj->{raw_vars}->{"\Q<$_>\E"} = $vars->{$_} for keys %$vars;
+    }
     ( $obj->{rules},
       $obj->{code} ) = compile_rules($rules, $obj->{vars}, $obj->{raw_vars}, $opts);
 
@@ -153,7 +156,11 @@ sub compile_rules {
             }
 
             # Now expand categories
-            $subfrom =~ s{(\\?)(.)}{$vars->{$2} || $1 . $2}eg;
+            if($opt->{longVars}) {
+                $subfrom =~ s{(\\<[^>]+\\>)}{$vars->{$1} || $1}eg;
+            } else {
+                $subfrom =~ s{(\\?)(.)}{$vars->{$2} || $1 . $2}eg;
+            }
 
             # Show where the rule matches, if desired
             if($opt->{printRules}) {
@@ -161,8 +168,9 @@ sub compile_rules {
             }
 
             $subto .= '$1 . ';
-            $subto .= ($vars->{$from} ? "do { my \$char = \$2; \$char =~ tr{$varstring->{$from}}{" . ($varstring->{$to} || $to) . "}; \$char }"
-                                      : "q{" . $to . "}");
+            $subto .= ($vars->{quotemeta $from}
+                      ? "do { my \$char = \$2; \$char =~ tr{$varstring->{quotemeta $from}}{" . ($varstring->{quotemeta $to} || $to) . "}; \$char }"
+                      : "q{" . $to . "}");
             $subto .= ' . $3';
 
             if(PRINT_RULES) {
@@ -200,7 +208,7 @@ sub compile_vars {
         # Escape at signs and dollars in the list
         $list =~ s/([\$\@])/\\$1/g;
 
-        $compiledvars{$var} = qr/[$list]/;
+        $compiledvars{$var} = $compiledvars{"\Q<$var>\E"} = qr/[$list]/;
 
         if(PRINT_RULES) {
             print "($var => $list // $compiledvars{$var})\n";
@@ -319,6 +327,17 @@ this to C<new>:
 
   { V => 'ptk', U => 'bdg' }
 
+If you use the "longVars" option, you can give your variables longer
+names.  The variable names can contain any character except for angle
+brackets. If you use this option, then variable names must be enclosed
+in angle brackets in rules to differentiate them from normal letters. The
+above variables could then be written, for example, as:
+
+  { '-vcd' => 'ptk', '+vcd' => 'bdg' }
+
+Note that you must enclose the variable names in quotes if they contain
+characters other than letters, digits, and underscores.
+
 =item rules
 
 The second parameter is an array ref listing zero or more "rules".
@@ -329,7 +348,15 @@ are presented.
 For more information on the format of these rules, see L</"Format of
 sound change rules">.
 
-B<NOTE>: Do not use characters in the rules or variable names
+If you use the option longVars, then variables must be enclosed in
+angle brackets, for example:
+
+  <-vcd>/<+vcd>/<vowel>_<vowel>
+
+for consonant voicing between vowels, assuming you have variables called
+"-vcd", "+vcd", and "vowel".
+
+B<NOTE>: You should not use characters in the rules or variable names
 which are special to regular expressions. This includes the
 following characters: C<. * + ? [ ] { } ( )>. (Exception: the use
 of parentheses to mark something as optional in an environment.)
@@ -367,6 +394,14 @@ original word as passed in to the C<change> method, and second the
 only the (possibly transformed) word.
 
 Default: false.
+
+=item longVars
+
+If this option is set to a true value, then you can use long variable
+names (of more than one letter). These must be enclosed in angle brackets
+in rules.
+
+Default: false
 
 =back
 

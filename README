@@ -1,4 +1,4 @@
-Lingua/SoundChange version 0.02
+Lingua/SoundChange version 0.03
 ===============================
 
 This module was inspired by Mark Rosenfelder's sound change applier
@@ -8,10 +8,10 @@ a parent language to a daughter language.
 
 DIFFERENCES FROM THE LAST VERSION
 
-I believe that v0.02 of this module is not based on Mark's code in
-sounds.c any more. The 'sounds' example script has been removed until
-a replacement can be written from scratch. The module has been
-relicensed under a BSD-style licence.
+Version 0.03 adds multiple-letter variable names. You can now use variable
+names such as "cons" or "+vcd" rather than "C" or "V".
+
+For changes from previous versions, see the file Changes.
 
 INSTALLATION
 

@@ -1,5 +1,8 @@
 Revision history for Perl extension Lingua::SoundChange.
 
+0.03  Sat Oct  6 20:19:20 2001
+	- added multiple-letter variable names
+
 0.02  Sat Oct  6 17:30:51 2001
 	- changed licensing terms to BSD-style licence; removed sample 'sounds'
 		wrapper script from the MANIFEST and distribution file
